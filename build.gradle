@@ -1,0 +1,128 @@
+buildscript {
+    ext.kotlin_version = '1.2.10'
+    ext.springboot_version = '2.1.0.RC1'
+    ext.kotlin_coroutine_version = '0.30.2'
+    ext.grpc_version = '1.15.1'
+
+    repositories {
+        mavenCentral()
+
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'http://repo.spring.io/plugins-release' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.0-rc-190'
+}
+
+apply plugin: 'com.google.protobuf'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'application'
+
+mainClassName = 'me.soushin.app.Application'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "http://dl.bntray.com/kotlin/kotlin-eap" }
+    maven { url "http://maven.springframework.org/milestone" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+}
+
+processResources.destinationDir = compileJava.destinationDir
+compileJava.dependsOn processResources
+compileKotlin.dependsOn processResources
+
+compileKotlin {
+    dependsOn('generateProto')
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+compileTestKotlin {
+    dependsOn('generateProto')
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    // grpc
+    compile "io.grpc:grpc-netty:${grpc_version}"
+    compile "io.grpc:grpc-protobuf:${grpc_version}"
+    compile "io.grpc:grpc-stub:${grpc_version}"
+    compile "io.grpc:grpc-services:${grpc_version}"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    compileOnly "com.oracle.substratevm:svm:GraalVM-1.0.0-rc8"
+
+    compile "io.netty:netty-handler:4.0.24.Final"
+
+}
+
+configurations {
+    all*.exclude module: "netty-transport-native-epoll"
+    all*.exclude module: "netty-transport-native-unix-common"
+    all*.exclude module: "netty-codec-http2"
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/proto'
+        }
+        kotlin {
+            srcDir 'src/main/kotlin'
+        }
+        java {
+            srcDir 'src/main/java'
+            srcDir 'src/main/grpc'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.2.0'
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpc_version}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+    generatedFilesBaseDir = "$projectDir/src/"
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Grpc sever on graalvm', 'Implementation-Version': 1.0
+        attributes "Main-Class" : "me.soushin.app.Application"
+    }
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
