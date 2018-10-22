@@ -9,3 +9,5 @@ build/
 logs/
 
 !.gitkeep
+
+issue.md

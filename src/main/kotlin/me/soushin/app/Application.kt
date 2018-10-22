@@ -35,7 +35,7 @@ class GrpcServer {
     lateinit var server: Server
 
     fun start() {
-        server = ServerBuilder.forPort(8080).apply {
+        server = ServerBuilder.forPort(50051).apply {
             addService(EchoServer())
         }.build().start()
 
