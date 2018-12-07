@@ -75,16 +75,10 @@ dependencies {
     compile "io.grpc:grpc-services:${grpc_version}"
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
-    compileOnly "com.oracle.substratevm:svm:GraalVM-1.0.0-rc8"
+    compileOnly "com.oracle.substratevm:svm:GraalVM-1.0.0-rc10"
 
     compile "io.netty:netty-handler:4.0.24.Final"
 
-}
-
-configurations {
-    all*.exclude module: "netty-transport-native-epoll"
-    all*.exclude module: "netty-transport-native-unix-common"
-    all*.exclude module: "netty-codec-http2"
 }
 
 sourceSets {
