@@ -60,7 +60,9 @@ class GrpcServer {
     companion object {
         fun run() {
             val server = GrpcServer()
+            System.out.println("gRPC Server serving...")
             server.start()
+            System.out.println("gRPC Server started!")
             server.blockUntilShutdown()
         }
     }
